@@ -38,6 +38,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var file_lookup_1 = require("./file-lookup");
 var simplegit = require("simple-git/promise");
 var logger_1 = require("./logger");
+var fs_1 = require("fs");
+//TODO URI git hooks
 var Main = (function () {
     function Main() {
         this.gitPath = 'c:\\work\\pmain';
@@ -51,7 +53,7 @@ var Main = (function () {
     }
     Main.prototype.run = function () {
         this.logger.info("Init");
-        this.checkJSfiles();
+        this.fileAnaylize();
         this.pull();
     };
     Main.prototype.pull = function () {
@@ -69,18 +71,71 @@ var Main = (function () {
                         return [3 /*break*/, 3];
                     case 2:
                         e_1 = _a.sent();
-                        this.logger.error(e_1);
+                        this.logger.error("Failed while trying to pull\n" + e_1);
                         return [3 /*break*/, 3];
                     case 3: return [2 /*return*/];
                 }
             });
         });
     };
-    Main.prototype.checkJSfiles = function () {
-        this.logger.info("Looking for JS files");
+    Main.prototype.fileAnaylize = function () {
+        this.logger.info("Analyzing files");
         var excludeDirNames = ["node_modules", "build", "libs"];
+        var patternsToSearch = ["$scope"];
         var websitePath = this.gitPath + "//panayax//projects//as-web-site//src//main//webapp//app//@fingerprint@";
-        var fileList = this.fileLookup.getFilesList(websitePath, excludeDirNames);
+        var fileList = this.fileLookup.getFilesList(websitePath, excludeDirNames); //TODO URI can be analyzed with dynamic programming 
+        this.analyzeJSfiles(fileList);
+        this.analyzePatterns(fileList, patternsToSearch);
+    };
+    Main.prototype.readFilePromise = function (fileName) {
+        var promise = new Promise(function (resolve, reject) {
+            fs_1.readFile(fileName, 'utf8', function (err, data) {
+                if (err) {
+                    reject(err);
+                }
+                else {
+                    resolve(data);
+                }
+            });
+        });
+        return promise;
+    };
+    Main.prototype.readFilesPromise = function (fileList) {
+    };
+    Main.prototype.analyzePatterns = function (fileList, patternsToSearch) {
+        var _this = this;
+        var analyzedPatterns = {};
+        this.logger.info("Analyzing injections");
+        var codeFileList = fileList.filter(function (fileName) { return fileName.endsWith(".js") || fileName.endsWith(".ts"); });
+        var mitzi = codeFileList.map(function (file) { return _this.readFilePromise(file); });
+        Promise.all(mitzi).then(function (a) {
+            console.log("aaaaaaaaa", a);
+        });
+        console.log("finished!");
+        /*codeFileList.forEach(async fileName => {
+            try {
+                let fileData = await this.readFilePromise(fileName);
+                patternsToSearch.forEach( patternToSearch => {
+                    let patternExists = fileData.includes(patternToSearch);
+                    if (patternExists) {
+                        if (analyzedPatterns[patternToSearch]) {
+                            let existingAnalyzedPattern : AnalyzePattern = analyzedPatterns[patternToSearch];
+                            existingAnalyzedPattern.numOfOccurrences++;
+                        } else {
+                            let newAnalyzedPattern = new AnalyzePattern();
+                            newAnalyzedPattern.numOfOccurrences = 1;
+                            analyzedPatterns[patternToSearch] = newAnalyzedPattern;
+                        }
+                    }
+                });
+            } catch (error) {
+                this.logger.error("Error while reading from " + fileName + " Error:\n" + error)
+            }
+            console.log("finished", analyzedPatterns);
+        });*/
+        console.log(analyzedPatterns);
+    };
+    Main.prototype.analyzeJSfiles = function (fileList) {
         var jsFileList = fileList.filter(function (fileName) { return fileName.endsWith(".js"); });
         this.logger.info("Found " + jsFileList.length + " JS files");
     };

@@ -5,13 +5,19 @@ export class FileLookup {
 
     }
 
-    getFilesList(path: string, excludeDirNames : string[]) {
+    getFilesList(
+                    path: string, 
+                    excludeDirNames : string[]
+                    ) : string[] {
         let filelist = [];
         this.walkSync(path, filelist, excludeDirNames);
         return filelist;
     }
 
-    private walkSync(path: string, filelist: string[], excludeDirNames : string[]) {
+    private walkSync(
+                        path: string, 
+                        filelist: string[], 
+                        excludeDirNames : string[]) {
         let files = readdirSync(path);
         filelist = filelist || [];
         files.forEach( (file) => {
