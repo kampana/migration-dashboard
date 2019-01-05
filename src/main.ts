@@ -1,48 +1,49 @@
+import { FileLookup } from './file-lookup';
 import * as simplegit from 'simple-git/promise';
-import { StatusResult, PullResult } from 'simple-git/promise';
-import { format, createLogger, transports } from 'winston';
+import Logger from './logger';
 
-const { combine, timestamp, label, printf } = format;
-const myFormat = printf(info => {
-    return `${info.timestamp} [${info.label}] ${info.level}: ${info.message}`;
-});
+export class Main {
+    private logger: Logger;
+    private fileLookup: FileLookup;
+    private git: simplegit.SimpleGit;
+    readonly gitPath = 'c:\\work\\pmain';
+    readonly gitBranch = 'master';
 
-const logger = createLogger({
-    transports: [
-        new transports.Console({
-            format: combine(
-                format.colorize(),
-                label({ label: 'Main' }),
-                timestamp(),
-                myFormat)
-            }),
-        new transports.File({ 
-            format: combine(
-                label({ label: 'Main' }),
-                timestamp(),
-                myFormat),
-            filename: 'combined.log' }
-            )
-    ]
-});
-
-logger.info("Init");
-
-
-const git = simplegit('c:\\work\\pmain');
-git.status().then((status: StatusResult) => {
-    console.log(status);
-})
-
-async function pull() {
-    let pullSummary: PullResult = null;
-    try {
-        pullSummary = await git.pull('origin', 'master');
-        console.log("line here"); //TODO URI
+    constructor() {
+        this.logger = new Logger('Main');
+        this.fileLookup = new FileLookup();
+        this.git = simplegit(this.gitPath);
+        /*git.status().then((status: StatusResult) => {
+            logger.info(status);
+        })*/
     }
-    catch (e) {
-        logger.error("asdfsadf");
+
+    run() {
+        this.logger.info("Init");
+        this.checkJSfiles();
+        this.pull();
+    }
+
+    async pull() {
+        try {
+            this.logger.info("Pulling from " + this.gitBranch);
+            let pullSummary = await this.git.pull('origin', this.gitBranch);
+            this.logger.info(pullSummary);
+        }
+        catch (e) {
+            this.logger.error(e);
+        }
+    }
+
+    checkJSfiles() {
+        this.logger.info("Looking for JS files");
+        const excludeDirNames = ["node_modules", "build", "libs"];
+        const websitePath = this.gitPath + "//panayax//projects//as-web-site//src//main//webapp//app//@fingerprint@";
+        let fileList = this.fileLookup.getFilesList(websitePath, excludeDirNames);
+        let jsFileList = fileList.filter(fileName => fileName.endsWith(".js"));
+        this.logger.info("Found " + jsFileList.length + " JS files");
     }
 }
 
-pull();
+let main = new Main();
+main.run();

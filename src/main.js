@@ -35,50 +35,57 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+var file_lookup_1 = require("./file-lookup");
 var simplegit = require("simple-git/promise");
-var winston_1 = require("winston");
-var combine = winston_1.format.combine, timestamp = winston_1.format.timestamp, label = winston_1.format.label, printf = winston_1.format.printf;
-var myFormat = printf(function (info) {
-    return info.timestamp + " [" + info.label + "] " + info.level + ": " + info.message;
-});
-var logger = winston_1.createLogger({
-    transports: [
-        new winston_1.transports.Console({
-            format: combine(winston_1.format.colorize(), label({ label: 'Main' }), timestamp(), myFormat)
-        }),
-        new winston_1.transports.File({
-            format: combine(label({ label: 'Main' }), timestamp(), myFormat),
-            filename: 'combined.log'
-        })
-    ]
-});
-logger.info("Init");
-var git = simplegit('c:\\work\\pmain');
-git.status().then(function (status) {
-    console.log(status);
-});
-function pull() {
-    return __awaiter(this, void 0, void 0, function () {
-        var pullSummary, e_1;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0:
-                    pullSummary = null;
-                    _a.label = 1;
-                case 1:
-                    _a.trys.push([1, 3, , 4]);
-                    return [4 /*yield*/, git.pull('origin', 'master')];
-                case 2:
-                    pullSummary = _a.sent();
-                    console.log("line here"); //TODO URI
-                    return [3 /*break*/, 4];
-                case 3:
-                    e_1 = _a.sent();
-                    logger.error("asdfsadf");
-                    return [3 /*break*/, 4];
-                case 4: return [2 /*return*/];
-            }
+var logger_1 = require("./logger");
+var Main = (function () {
+    function Main() {
+        this.gitPath = 'c:\\work\\pmain';
+        this.gitBranch = 'master';
+        this.logger = new logger_1.default('Main');
+        this.fileLookup = new file_lookup_1.FileLookup();
+        this.git = simplegit(this.gitPath);
+        /*git.status().then((status: StatusResult) => {
+            logger.info(status);
+        })*/
+    }
+    Main.prototype.run = function () {
+        this.logger.info("Init");
+        this.checkJSfiles();
+        this.pull();
+    };
+    Main.prototype.pull = function () {
+        return __awaiter(this, void 0, void 0, function () {
+            var pullSummary, e_1;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        _a.trys.push([0, 2, , 3]);
+                        this.logger.info("Pulling from " + this.gitBranch);
+                        return [4 /*yield*/, this.git.pull('origin', this.gitBranch)];
+                    case 1:
+                        pullSummary = _a.sent();
+                        this.logger.info(pullSummary);
+                        return [3 /*break*/, 3];
+                    case 2:
+                        e_1 = _a.sent();
+                        this.logger.error(e_1);
+                        return [3 /*break*/, 3];
+                    case 3: return [2 /*return*/];
+                }
+            });
         });
-    });
-}
-pull();
+    };
+    Main.prototype.checkJSfiles = function () {
+        this.logger.info("Looking for JS files");
+        var excludeDirNames = ["node_modules", "build", "libs"];
+        var websitePath = this.gitPath + "//panayax//projects//as-web-site//src//main//webapp//app//@fingerprint@";
+        var fileList = this.fileLookup.getFilesList(websitePath, excludeDirNames);
+        var jsFileList = fileList.filter(function (fileName) { return fileName.endsWith(".js"); });
+        this.logger.info("Found " + jsFileList.length + " JS files");
+    };
+    return Main;
+}());
+exports.Main = Main;
+var main = new Main();
+main.run();
