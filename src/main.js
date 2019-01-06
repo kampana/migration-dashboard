@@ -39,6 +39,7 @@ var file_lookup_1 = require("./file-lookup");
 var simplegit = require("simple-git/promise");
 var logger_1 = require("./logger");
 var fs_1 = require("fs");
+var analyze_pattern_1 = require("./analyze-pattern");
 //TODO URI git hooks
 var Main = (function () {
     function Main() {
@@ -47,14 +48,18 @@ var Main = (function () {
         this.logger = new logger_1.default('Main');
         this.fileLookup = new file_lookup_1.FileLookup();
         this.git = simplegit(this.gitPath);
-        /*git.status().then((status: StatusResult) => {
-            logger.info(status);
+        /*this.git.status().then((status: StatusResult) => {
+            this.logger.info(status);
         })*/
     }
     Main.prototype.run = function () {
+        var _this = this;
         this.logger.info("Init");
         this.fileAnaylize();
-        this.pull();
+        setInterval(function () {
+            _this.pull();
+            _this.fileAnaylize();
+        }, 10 * 60 * 1000);
     };
     Main.prototype.pull = function () {
         return __awaiter(this, void 0, void 0, function () {
@@ -81,20 +86,21 @@ var Main = (function () {
     Main.prototype.fileAnaylize = function () {
         this.logger.info("Analyzing files");
         var excludeDirNames = ["node_modules", "build", "libs"];
-        var patternsToSearch = ["$scope"];
+        var patternsToSearch = ["$scope", "$timeout", "$state", "$stateParams", "$compile", "$window", "$q"];
         var websitePath = this.gitPath + "//panayax//projects//as-web-site//src//main//webapp//app//@fingerprint@";
         var fileList = this.fileLookup.getFilesList(websitePath, excludeDirNames); //TODO URI can be analyzed with dynamic programming 
         this.analyzeJSfiles(fileList);
         this.analyzePatterns(fileList, patternsToSearch);
     };
-    Main.prototype.readFilePromise = function (fileName) {
+    Main.prototype.readFilePromise = function (fileName, callbackHandle, patternsToSearch, analyzedPatterns) {
         var promise = new Promise(function (resolve, reject) {
             fs_1.readFile(fileName, 'utf8', function (err, data) {
                 if (err) {
                     reject(err);
                 }
                 else {
-                    resolve(data);
+                    callbackHandle(data, patternsToSearch, analyzedPatterns);
+                    resolve();
                 }
             });
         });
@@ -102,38 +108,32 @@ var Main = (function () {
     };
     Main.prototype.readFilesPromise = function (fileList) {
     };
+    Main.prototype.findPatternInDataData = function (fileData, patternsToSearch, analyzedPatterns) {
+        patternsToSearch.forEach(function (patternToSearch) {
+            var patternExists = fileData.includes(patternToSearch);
+            if (patternExists) {
+                if (analyzedPatterns[patternToSearch]) {
+                    var existingAnalyzedPattern = analyzedPatterns[patternToSearch];
+                    existingAnalyzedPattern.numOfOccurrences++;
+                }
+                else {
+                    var newAnalyzedPattern = new analyze_pattern_1.AnalyzePattern();
+                    newAnalyzedPattern.numOfOccurrences = 1;
+                    analyzedPatterns[patternToSearch] = newAnalyzedPattern;
+                }
+            }
+        });
+    };
     Main.prototype.analyzePatterns = function (fileList, patternsToSearch) {
         var _this = this;
         var analyzedPatterns = {};
-        this.logger.info("Analyzing injections");
+        this.logger.info("Analyzing patterns");
         var codeFileList = fileList.filter(function (fileName) { return fileName.endsWith(".js") || fileName.endsWith(".ts"); });
-        var mitzi = codeFileList.map(function (file) { return _this.readFilePromise(file); });
-        Promise.all(mitzi).then(function (a) {
-            console.log("aaaaaaaaa", a);
+        var allReadPromises = codeFileList.map(function (file) { return _this.readFilePromise(file, _this.findPatternInDataData, patternsToSearch, analyzedPatterns); });
+        Promise.all(allReadPromises).then(function () {
+            _this.logger.info("Analyzed patterns:");
+            _this.logger.info(analyzedPatterns);
         });
-        console.log("finished!");
-        /*codeFileList.forEach(async fileName => {
-            try {
-                let fileData = await this.readFilePromise(fileName);
-                patternsToSearch.forEach( patternToSearch => {
-                    let patternExists = fileData.includes(patternToSearch);
-                    if (patternExists) {
-                        if (analyzedPatterns[patternToSearch]) {
-                            let existingAnalyzedPattern : AnalyzePattern = analyzedPatterns[patternToSearch];
-                            existingAnalyzedPattern.numOfOccurrences++;
-                        } else {
-                            let newAnalyzedPattern = new AnalyzePattern();
-                            newAnalyzedPattern.numOfOccurrences = 1;
-                            analyzedPatterns[patternToSearch] = newAnalyzedPattern;
-                        }
-                    }
-                });
-            } catch (error) {
-                this.logger.error("Error while reading from " + fileName + " Error:\n" + error)
-            }
-            console.log("finished", analyzedPatterns);
-        });*/
-        console.log(analyzedPatterns);
     };
     Main.prototype.analyzeJSfiles = function (fileList) {
         var jsFileList = fileList.filter(function (fileName) { return fileName.endsWith(".js"); });

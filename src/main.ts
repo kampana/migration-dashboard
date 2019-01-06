@@ -3,6 +3,7 @@ import * as simplegit from 'simple-git/promise';
 import Logger from './logger';
 import { readFile, readFileSync } from 'fs';
 import { AnalyzePattern } from './analyze-pattern';
+import { StatusResult } from 'simple-git/promise';
 //TODO URI git hooks
 export class Main {
     private logger: Logger;
@@ -15,15 +16,18 @@ export class Main {
         this.logger = new Logger('Main');
         this.fileLookup = new FileLookup();
         this.git = simplegit(this.gitPath);
-        /*git.status().then((status: StatusResult) => {
-            logger.info(status);
+        /*this.git.status().then((status: StatusResult) => {
+            this.logger.info(status);
         })*/
     }
 
     run() {
         this.logger.info("Init");
         this.fileAnaylize();
-        this.pull();
+        setInterval( () => {
+            this.pull();
+            this.fileAnaylize();
+        }, 10*60*1000);
     }
 
     async pull() {
@@ -31,6 +35,7 @@ export class Main {
             this.logger.info("Pulling from " + this.gitBranch);
             let pullSummary = await this.git.pull('origin', this.gitBranch);
             this.logger.info(pullSummary);
+            //TODO URI handle delta changes: new files, deleted files, and changed
         }
         catch (e) {
             this.logger.error("Failed while trying to pull\n" + e);
@@ -40,20 +45,21 @@ export class Main {
     fileAnaylize() {
         this.logger.info("Analyzing files");
         const excludeDirNames = ["node_modules", "build", "libs"];
-        const patternsToSearch = ["$scope"];
+        const patternsToSearch = ["$scope", "$timeout", "$state", "$stateParams", "$compile", "$window", "$q"];
         const websitePath = this.gitPath + "//panayax//projects//as-web-site//src//main//webapp//app//@fingerprint@";
         let fileList = this.fileLookup.getFilesList(websitePath, excludeDirNames);//TODO URI can be analyzed with dynamic programming 
         this.analyzeJSfiles(fileList);
         this.analyzePatterns(fileList, patternsToSearch);
     }
 
-    readFilePromise(fileName : string) : Promise<string> {
+    readFilePromise(fileName : string, callbackHandle, patternsToSearch : string[], analyzedPatterns : {}) : Promise<string> {
         let promise : Promise<string> = new Promise((resolve, reject) => {
             readFile(fileName, 'utf8', (err, data) => {
                 if (err) {
                     reject(err);
                 } else {
-                    resolve(data);
+                    callbackHandle(data, patternsToSearch, analyzedPatterns)
+                    resolve();
                 }
             });
         });
@@ -64,37 +70,31 @@ export class Main {
         
     }
 
+    findPatternInDataData(fileData, patternsToSearch, analyzedPatterns) {
+        patternsToSearch.forEach( patternToSearch => {
+            let patternExists = fileData.includes(patternToSearch);
+            if (patternExists) {
+                if (analyzedPatterns[patternToSearch]) {
+                    let existingAnalyzedPattern : AnalyzePattern = analyzedPatterns[patternToSearch];
+                    existingAnalyzedPattern.numOfOccurrences++;
+                } else {
+                    let newAnalyzedPattern = new AnalyzePattern();
+                    newAnalyzedPattern.numOfOccurrences = 1;
+                    analyzedPatterns[patternToSearch] = newAnalyzedPattern;
+                }
+            }
+        });
+    }
+
     analyzePatterns(fileList: string[], patternsToSearch : string[]) {
         let analyzedPatterns = {};
-        this.logger.info("Analyzing injections");
+        this.logger.info("Analyzing patterns");
         let codeFileList = fileList.filter(fileName => fileName.endsWith(".js") || fileName.endsWith(".ts"));
-        let mitzi = codeFileList.map((file) => this.readFilePromise(file));
-        Promise.all(mitzi).then( a=> {
-            console.log("aaaaaaaaa",a);
+        let allReadPromises = codeFileList.map((file) => this.readFilePromise(file, this.findPatternInDataData, patternsToSearch, analyzedPatterns));
+        Promise.all(allReadPromises).then( () => {
+            this.logger.info("Analyzed patterns:");
+            this.logger.info(analyzedPatterns);
         })
-        console.log("finished!");
-        /*codeFileList.forEach(async fileName => {
-            try {
-                let fileData = await this.readFilePromise(fileName);
-                patternsToSearch.forEach( patternToSearch => {
-                    let patternExists = fileData.includes(patternToSearch);
-                    if (patternExists) {
-                        if (analyzedPatterns[patternToSearch]) {
-                            let existingAnalyzedPattern : AnalyzePattern = analyzedPatterns[patternToSearch];
-                            existingAnalyzedPattern.numOfOccurrences++;
-                        } else {
-                            let newAnalyzedPattern = new AnalyzePattern();
-                            newAnalyzedPattern.numOfOccurrences = 1;
-                            analyzedPatterns[patternToSearch] = newAnalyzedPattern;
-                        }
-                    }
-                });
-            } catch (error) {
-                this.logger.error("Error while reading from " + fileName + " Error:\n" + error)
-            }
-            console.log("finished", analyzedPatterns);
-        });*/
-        console.log(analyzedPatterns);
     }
 
     private analyzeJSfiles(fileList: string[]) : void {
