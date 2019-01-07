@@ -24,6 +24,7 @@ export class Main {
     run() {
         this.logger.info("Init");
         this.fileAnaylize();
+        this.logger.info("Sleeping until first interval")
         setInterval( () => {
             this.pull();
             this.fileAnaylize();

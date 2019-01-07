@@ -56,6 +56,7 @@ var Main = (function () {
         var _this = this;
         this.logger.info("Init");
         this.fileAnaylize();
+        this.logger.info("Sleeping until first interval");
         setInterval(function () {
             _this.pull();
             _this.fileAnaylize();
