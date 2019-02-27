@@ -16,11 +16,13 @@
     "fs": "0.0.1-security",
     "navigator": "^1.0.1",
     "simple-git": "^1.107.0",
+    "webpack-node-externals": "^1.7.2",
     "winston": "^3.1.0"
   },
   "devDependencies": {
     "@types/elasticsearch": "^5.0.30",
-    "ts-loader": "^5.3.2",
+    "nodemon-webpack-plugin": "^4.0.7",
+    "ts-loader": "^5.3.3",
     "typescript": "^3.2.2",
     "webpack": "^4.28.3",
     "webpack-cli": "^3.2.0"

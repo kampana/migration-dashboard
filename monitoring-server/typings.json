@@ -2,5 +2,8 @@
     "ambientDependencies": {
         "es6-shim": "github:DefinitelyTyped/DefinitelyTyped/es6-shim/es6-shim.d.ts#6697d6f7dadbf5773cb40ecda35a76027e0783b2",
         "angular": "github:DefinitelyTyped/DefinitelyTyped/angularjs/angular.d.ts#5256422ee72d2b1ab41bbb72eb47754e202b6bb8"
+    },
+    "compilerOptions": {
+        "sourceMap": true
     }
 }

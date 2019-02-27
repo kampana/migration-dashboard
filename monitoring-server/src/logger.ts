@@ -1,4 +1,4 @@
-import { createLogger, transports, format, loggers } from "winston";
+import { createLogger, transports, format } from "winston";
 
 
 export default class Logger {
