@@ -1,5 +1,6 @@
 import { Client } from 'elasticsearch';
 import Logger from './logger';
+import { IterationStatistics } from './data-model/iteration-statistics';
 
 
 export class DataAccessLayer {
@@ -14,13 +15,19 @@ export class DataAccessLayer {
         });
     }
 
-    async update(jsFiles : string[], analyzedPatterns: {}) {
+    diff(arr1 : any[], arr2 : any[]) {
+        return arr1.filter(function(i) {return arr2.indexOf(i) < 0;});
+    }
+
+    async update(previousIteration : IterationStatistics, currentIteration : IterationStatistics, analyzedPatterns: {}) {
         try {
             await this.client.index({
                 index: 'migration-dashboard',
                 type: 'js',
                 body: {
-                    numberOfJsFiles: jsFiles.length,
+                    numberOfJsFiles: currentIteration.jsFiles.length,
+                    jsFilesRemoved: previousIteration.jsFiles.length !== 0 ? this.diff(previousIteration.jsFiles, currentIteration.jsFiles) : undefined,
+                    jsFilesAdded: previousIteration.jsFiles.length !== 0 ? this.diff(currentIteration.jsFiles, previousIteration.jsFiles) : undefined,
                     analyzedPatterns: analyzedPatterns,
                     timestamp: new Date()
                 }

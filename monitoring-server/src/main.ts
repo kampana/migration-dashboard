@@ -1,9 +1,10 @@
 import * as simplegit from 'simple-git/promise';
 import Logger from './logger';
 import { readFile } from 'fs';
-import { AnalyzePattern } from './analyze-pattern';
 import { DataAccessLayer } from './data-access-layer';
 import { FileLookup } from './file-lookup';
+import { AnalyzePattern } from './data-model/analyze-pattern';
+import { IterationStatistics } from './data-model/iteration-statistics';
 
 //TODO URI git hooks
 export class Main {
@@ -13,6 +14,8 @@ export class Main {
     private git: simplegit.SimpleGit;
     readonly gitPath = 'c:\\work\\pmain';
     readonly gitBranch = 'master';
+    private currentIteration : IterationStatistics = { jsFiles : [] };
+    private previousIteration : IterationStatistics  = { jsFiles : [] };;
 
     constructor() {
         this.logger = new Logger('Main');
@@ -24,6 +27,10 @@ export class Main {
         })*/
     }
 
+    diff(arr1 : any[], arr2 : any[]) {
+        return arr1.filter(function(i) {return arr2.indexOf(i) < 0;});
+    }
+   
     run() {
         this.logger.info("Init");
         this.fileAnaylize();
@@ -33,6 +40,7 @@ export class Main {
             this.fileAnaylize();
             this.logger.info("Sleeping until next interval")
         }, 10 * 60 * 1000);
+        //}, 10 * 1000);
     }
 
     async pull() {
@@ -40,7 +48,6 @@ export class Main {
             this.logger.info("Pulling from " + this.gitBranch);
             let pullSummary = await this.git.pull('origin', this.gitBranch);
             this.logger.info(pullSummary);
-            //TODO URI handle delta changes: new files, deleted files, and changed
         }
         catch (e) {
             this.logger.error("Failed while trying to pull\n" + e);
@@ -53,9 +60,10 @@ export class Main {
         const patternsToSearch = ["$scope", "$timeout", "$state", "$stateParams", "$compile", "$window", "$q"];
         const websitePath = this.gitPath + "//panayax//projects//as-web-site//src//main//webapp//app//@fingerprint@";
         let fileList = this.fileLookup.getFilesList(websitePath, excludeDirNames);//TODO URI can be analyzed with dynamic programming 
-        let jsFiles = this.analyzeJSfiles(fileList);
+        this.currentIteration.jsFiles = this.analyzeJSfiles(fileList);
         let analyzedPatterns = await this.analyzePatterns(fileList, patternsToSearch);
-        this.dataAccessLayer.update(jsFiles, analyzedPatterns);
+        this.dataAccessLayer.update(this.previousIteration, this.currentIteration, analyzedPatterns);
+        this.previousIteration.jsFiles = this.currentIteration.jsFiles;
     }
 
     readFilePromise(fileName: string, callbackHandle, patternsToSearch: string[], analyzedPatterns: {}): Promise<string> {
