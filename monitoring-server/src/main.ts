@@ -1,12 +1,14 @@
-import { FileLookup } from './file-lookup';
 import * as simplegit from 'simple-git/promise';
 import Logger from './logger';
-import { readFile, readFileSync } from 'fs';
+import { readFile } from 'fs';
 import { AnalyzePattern } from './analyze-pattern';
-import { StatusResult } from 'simple-git/promise';
+import { DataAccessLayer } from './data-access-layer';
+import { FileLookup } from './file-lookup';
+
 //TODO URI git hooks
 export class Main {
     private logger: Logger;
+    private dataAccessLayer: DataAccessLayer;
     private fileLookup: FileLookup;
     private git: simplegit.SimpleGit;
     readonly gitPath = 'c:\\work\\pmain';
@@ -15,6 +17,7 @@ export class Main {
     constructor() {
         this.logger = new Logger('Main');
         this.fileLookup = new FileLookup();
+        this.dataAccessLayer = new DataAccessLayer(this.logger);
         this.git = simplegit(this.gitPath);
         /*this.git.status().then((status: StatusResult) => {
             this.logger.info(status);
@@ -25,11 +28,11 @@ export class Main {
         this.logger.info("Init");
         this.fileAnaylize();
         this.logger.info("Sleeping until first interval")
-        setInterval( () => {
+        setInterval(() => {
             this.pull();
             this.fileAnaylize();
             this.logger.info("Sleeping until next interval")
-        }, 10*60*1000);
+        }, 10 * 60 * 1000);
     }
 
     async pull() {
@@ -44,18 +47,19 @@ export class Main {
         }
     }
 
-    fileAnaylize() {
+    async fileAnaylize() {
         this.logger.info("Analyzing files");
         const excludeDirNames = ["node_modules", "build", "libs"];
         const patternsToSearch = ["$scope", "$timeout", "$state", "$stateParams", "$compile", "$window", "$q"];
         const websitePath = this.gitPath + "//panayax//projects//as-web-site//src//main//webapp//app//@fingerprint@";
         let fileList = this.fileLookup.getFilesList(websitePath, excludeDirNames);//TODO URI can be analyzed with dynamic programming 
-        this.analyzeJSfiles(fileList);
-        this.analyzePatterns(fileList, patternsToSearch);
+        let jsFiles = this.analyzeJSfiles(fileList);
+        let analyzedPatterns = await this.analyzePatterns(fileList, patternsToSearch);
+        this.dataAccessLayer.update(jsFiles, analyzedPatterns);
     }
 
-    readFilePromise(fileName : string, callbackHandle, patternsToSearch : string[], analyzedPatterns : {}) : Promise<string> {
-        let promise : Promise<string> = new Promise((resolve, reject) => {
+    readFilePromise(fileName: string, callbackHandle, patternsToSearch: string[], analyzedPatterns: {}): Promise<string> {
+        let promise: Promise<string> = new Promise((resolve, reject) => {
             readFile(fileName, 'utf8', (err, data) => {
                 if (err) {
                     reject(err);
@@ -68,16 +72,12 @@ export class Main {
         return promise;
     }
 
-    readFilesPromise(fileList: string[]) {
-        
-    }
-
     findPatternInDataData(fileData, patternsToSearch, analyzedPatterns) {
-        patternsToSearch.forEach( patternToSearch => {
+        patternsToSearch.forEach(patternToSearch => {
             let patternExists = fileData.includes(patternToSearch);
             if (patternExists) {
                 if (analyzedPatterns[patternToSearch]) {
-                    let existingAnalyzedPattern : AnalyzePattern = analyzedPatterns[patternToSearch];
+                    let existingAnalyzedPattern: AnalyzePattern = analyzedPatterns[patternToSearch];
                     existingAnalyzedPattern.numOfOccurrences++;
                 } else {
                     let newAnalyzedPattern = new AnalyzePattern();
@@ -88,20 +88,25 @@ export class Main {
         });
     }
 
-    analyzePatterns(fileList: string[], patternsToSearch : string[]) {
-        let analyzedPatterns = {};
-        this.logger.info("Analyzing patterns");
-        let codeFileList = fileList.filter(fileName => fileName.endsWith(".js") || fileName.endsWith(".ts"));
-        let allReadPromises = codeFileList.map((file) => this.readFilePromise(file, this.findPatternInDataData, patternsToSearch, analyzedPatterns));
-        Promise.all(allReadPromises).then( () => {
-            this.logger.info("Analyzed patterns:");
-            this.logger.info(analyzedPatterns);
-        })
+    async analyzePatterns(fileList: string[], patternsToSearch: string[]): Promise<{}> {
+        let promise: Promise<{}> = new Promise((resolve, reject) => {
+            let analyzedPatterns = {};
+            this.logger.info("Analyzing patterns");
+            let codeFileList = fileList.filter(fileName => fileName.endsWith(".js") || fileName.endsWith(".ts"));
+            let allReadPromises = codeFileList.map((file) => this.readFilePromise(file, this.findPatternInDataData, patternsToSearch, analyzedPatterns));
+            Promise.all(allReadPromises).then(() => {
+                this.logger.info("Analyzed patterns:");
+                this.logger.info(analyzedPatterns);
+                resolve(analyzedPatterns);
+            })
+        });
+        return promise;
     }
 
-    private analyzeJSfiles(fileList: string[]) : void {
+    analyzeJSfiles(fileList: string[]): string[] {
         let jsFileList = fileList.filter(fileName => fileName.endsWith(".js"));
         this.logger.info("Found " + jsFileList.length + " JS files");
+        return jsFileList;
     }
 
 }
