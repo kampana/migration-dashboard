@@ -27,10 +27,6 @@ export class Main {
         })*/
     }
 
-    diff(arr1 : any[], arr2 : any[]) {
-        return arr1.filter(function(i) {return arr2.indexOf(i) < 0;});
-    }
-   
     run() {
         this.logger.info("Init");
         this.fileAnaylize();
@@ -63,6 +59,10 @@ export class Main {
         this.currentIteration.jsFiles = this.analyzeJSfiles(fileList);
         let analyzedPatterns = await this.analyzePatterns(fileList, patternsToSearch);
         this.dataAccessLayer.update(this.previousIteration, this.currentIteration, analyzedPatterns);
+        this.cloneCurrentToPreviousIteration();
+    }
+
+    private cloneCurrentToPreviousIteration() {
         this.previousIteration.jsFiles = this.currentIteration.jsFiles;
     }
 
