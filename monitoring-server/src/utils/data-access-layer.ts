@@ -1,6 +1,6 @@
 import { Client } from 'elasticsearch';
 import Logger from './logger';
-import { IterationStatistics } from './data-model/iteration-statistics';
+import { IterationStatistics } from './data-type/iteration-statistics-interface';
 
 
 export class DataAccessLayer {
