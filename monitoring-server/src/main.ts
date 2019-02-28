@@ -1,7 +1,6 @@
 import { FileAnalyzer } from './utils/file-analyzer';
 import * as simplegit from 'simple-git/promise';
 import Logger from './utils/logger';
-import { PatternAnalyzer } from './utils/pattern-analyzer';
 
 //TODO URI git hooks
 export class Main {

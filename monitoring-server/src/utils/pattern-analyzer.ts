@@ -36,6 +36,7 @@ export class PatternAnalyzer {
                 } else {
                     let newAnalyzedPattern : AnalyzePattern =  { 
                         numOfOccurrences : 1,
+                        searchCategory: patternToSearch.searchCategory
                     }
                     analyzedPatterns[patternToSearch.displayName] = newAnalyzedPattern;
                 }
