@@ -8,9 +8,6 @@ The tool gathers the statistics from the local development git repository, polli
 
 
 ## Result example:
-
-
-my code ```
 here
 thjere
 asdfas
