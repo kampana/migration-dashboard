@@ -1,5 +1,5 @@
 # Angular Migration Dashboard
-This tool is geenrates statistics on your current JS files, and understand how many injectables are left to migrate. 
+This tool is generates statistics on your current JS files, and understand how many injectables are left to migrate. 
 
 
 ## How does it work?
@@ -39,6 +39,12 @@ The tool gathers the statistics from the local development git repository, polli
 
   }
 }
+```
+
+## How to run
+```
+npm install
+npm start
 ```
 
 
