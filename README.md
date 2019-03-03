@@ -10,7 +10,14 @@ The tool gathers the statistics from the local development git repository, polli
 ## Result example:
 
 
-my code ```here``` now
+my code ```
+here
+thjere
+asdfas
+asd
+fas
+df
+``` now
 
 `{
   "_source": {  
