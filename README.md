@@ -8,15 +8,8 @@ The tool gathers the statistics from the local development git repository, polli
 
 
 ## Result example:
-here
-thjere
-asdfas
-asd
-fas
-df
-``` now
-
-`{
+```
+{
   "_source": {  
     "numberOfJsFiles": 723,
     "timestamp": "2019-03-03T07:41:11.272Z",
@@ -46,7 +39,7 @@ df
 
   }
 }
-`
+```
 
 
 ## Security concerns 
