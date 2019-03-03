@@ -1,34 +1,34 @@
+import { ConfigLoader } from './../config/config-loader';
 import Logger from "./logger";
 import { FileLookup } from "./file-lookup";
 import { PatternAnalyzer } from "./pattern-analyzer";
 import { IterationStatistics } from "../data-type/iteration-statistics-interface";
-import { DataAccessLayer } from "./data-access-layer";
-import { searchPatterns } from "../data-model/search-patterns";
+import { ElasticSearch } from "../data-access-layer/elastic-search";
 
 export class FileAnalyzer {
     private fileLookup: FileLookup;
     private analyzer: PatternAnalyzer;
     private currentIteration : IterationStatistics = { jsFiles : [] };
     private previousIteration : IterationStatistics  = { jsFiles : [] };
-    private dataAccessLayer: DataAccessLayer;
+    private dataAccessLayer: ElasticSearch;
 
     
     constructor(
         private logger: Logger,
-        private gitPath
+        private configLoader : ConfigLoader
         ) {
             this.fileLookup = new FileLookup();
             this.analyzer = new PatternAnalyzer(this.logger);
-            this.dataAccessLayer = new DataAccessLayer(this.logger);
+            this.dataAccessLayer = new ElasticSearch(this.logger, this.configLoader);
     }
 
     public async fileAnaylize() {
         this.logger.info("Analyzing files");
         const excludeDirNames = ["node_modules", "build", "libs"];
-        const websitePath = this.gitPath + "//panayax//projects//as-web-site//src//main//webapp//app//@fingerprint@";
+        const websitePath = this.configLoader.getGit().path + "//panayax//projects//as-web-site//src//main//webapp//app//@fingerprint@";
         let fileList = this.fileLookup.getFilesList(websitePath, excludeDirNames);//TODO URI can be analyzed with dynamic programming 
         this.currentIteration.jsFiles = this.analyzeJSfiles(fileList);
-        let analyzedPatterns = await this.analyzer.analyzePatterns(fileList, searchPatterns);
+        let analyzedPatterns = await this.analyzer.analyzePatterns(fileList, this.configLoader.getSearchPatterns());
         this.dataAccessLayer.update(this.previousIteration, this.currentIteration, analyzedPatterns);
         this.cloneCurrentToPreviousIteration();
     }

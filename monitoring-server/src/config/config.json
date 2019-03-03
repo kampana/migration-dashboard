@@ -1,0 +1,76 @@
+{
+  "$schema": "./config-schema.json",
+  "git": {
+    "path": "c:\\work\\pmain",
+    "branch": "master"
+  },
+  "dataAccessLayer": {
+    "elasticSearch": {
+      "host": "http://elsearchtlv02:9200",
+      "index": "migration-dashboard",
+      "type": "js"
+    }
+  },
+  "searchPatterns": [
+    {
+      "pattern": "$scope",
+      "displayName": "$scope",
+      "searchCategory": "INJECTABLE"
+    },
+    {
+      "pattern": "$timeout",
+      "displayName": "$timeout",
+      "searchCategory": "INJECTABLE"
+    },
+    {
+      "pattern": "$state",
+      "displayName": "$state",
+      "searchCategory": "INJECTABLE"
+    },
+    {
+      "pattern": "$stateParams",
+      "displayName": "$stateParams",
+      "searchCategory": "INJECTABLE"
+    },
+    {
+      "pattern": "$compile",
+      "displayName": "$compile",
+      "searchCategory": "INJECTABLE"
+    },
+    {
+      "pattern": "$window",
+      "displayName": "$window",
+      "searchCategory": "INJECTABLE"
+    },
+    {
+      "pattern": "$q",
+      "displayName": "$q",
+      "searchCategory": "INJECTABLE"
+    },
+    {
+      "pattern": ".controller(",
+      "displayName": "controller",
+      "searchCategory": "COMPONENT_TYPE"
+    },
+    {
+      "pattern": ".directive(",
+      "displayName": "directive",
+      "searchCategory": "COMPONENT_TYPE"
+    },
+    {
+      "pattern": ".service(",
+      "displayName": "service",
+      "searchCategory": "COMPONENT_TYPE"
+    },
+    {
+      "pattern": ".factory(",
+      "displayName": "factory",
+      "searchCategory": "COMPONENT_TYPE"
+    },
+    {
+      "pattern": ".constant(",
+      "displayName": "constant",
+      "searchCategory": "COMPONENT_TYPE"
+    }
+  ]
+}

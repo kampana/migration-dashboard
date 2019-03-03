@@ -11,9 +11,9 @@ export class PatternAnalyzer {
         
     }
     
-    async analyzePatterns(fileList: string[], patternsToSearch: SearchPattern[]): Promise<{}> {
-        let promise: Promise<{}> = new Promise((resolve, reject) => {
-            let analyzedPatterns = {};
+    async analyzePatterns(fileList: string[], patternsToSearch: SearchPattern[]): Promise<any> {
+        let promise: Promise<{ any : AnalyzePattern}> = new Promise((resolve, reject) => {
+            let analyzedPatterns : any = { };
             this.logger.info("Analyzing patterns");
             let codeFileList = fileList.filter(fileName => fileName.endsWith(".js") || fileName.endsWith(".ts"));
             let allReadPromises = codeFileList.map((file) => this.readFilePromise(file, this.findPatternInData, patternsToSearch, analyzedPatterns));

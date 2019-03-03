@@ -1,0 +1,81 @@
+{
+  "properties": {
+    "git": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "format": "string",
+          "type": "string"
+        },
+        "branch": {
+          "format": "string",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "branch"
+      ]
+    },
+    "dataAccessLayer": {
+      "type": "object",
+      "properties": {
+        "elasticSearch": {
+          "type": "object",
+          "properties": {
+            "host": {
+              "format": "string",
+              "type": "string"
+            },
+            "index": {
+              "format": "string",
+              "type": "string"
+            },
+            "type": {
+              "format": "string",
+              "type": "string"
+            }
+          },
+          "required": [
+            "host",
+            "index",
+            "type"
+          ]
+        }
+      }
+    },
+    "searchPatterns": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "pattern": {
+            "type": "string",
+            "format": "string"
+          },
+          "displayName": {
+            "type": "string",
+            "format": "string"
+          },
+          "searchCategory": {
+            "type": "string",
+            "enum": [
+              "INJECTABLE",
+              "COMPONENT_TYPE"
+            ]
+          }
+        },
+        "required": [
+          "pattern",
+          "displayName",
+          "searchCategory"
+        ]
+      }
+    }
+  },
+  "required": [
+    "searchPatterns",
+    "git",
+    "dataAccessLayer"
+  ]
+}

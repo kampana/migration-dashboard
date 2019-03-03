@@ -1,17 +1,20 @@
-import { AnalyzePattern } from './../data-type/analyze-pattern-interface';
+import { ConfigLoader } from './../config/config-loader';
+import { AnalyzePattern } from '../data-type/analyze-pattern-interface';
 import { Client } from 'elasticsearch';
-import Logger from './logger';
+import Logger from '../utils/logger';
 import { IterationStatistics } from '../data-type/iteration-statistics-interface';
+import { DataAccessLayer } from './data-access-layer-interface';
 
 
-export class DataAccessLayer {
+export class ElasticSearch implements DataAccessLayer {
     private client: Client;
 
     constructor(
-        private logger: Logger
+        private logger: Logger,
+        private configLoader: ConfigLoader
     ) {
         this.client = new Client({
-            host: 'http://elsearchtlv02:9200',
+            host: this.configLoader.getElasticSearch().host,
             log: 'error'
         });
     }
@@ -20,12 +23,12 @@ export class DataAccessLayer {
         return arr1.filter(function(i) {return arr2.indexOf(i) < 0;});
     }
 
-    async update(previousIteration : IterationStatistics, currentIteration : IterationStatistics, analyzedPatterns: { any : AnalyzePattern} ) {
+    async update(previousIteration : IterationStatistics, currentIteration : IterationStatistics, analyzedPatterns: { any : AnalyzePattern} )  {
         let indexableResult = this.convertPatternsBySearchCategory(analyzedPatterns);
         try {
             await this.client.index({
-                index: 'migration-dashboard',
-                type: 'js',
+                index: this.configLoader.getElasticSearch().index,
+                type: this.configLoader.getElasticSearch().type,
                 body: {
                     numberOfJsFiles: currentIteration.jsFiles.length,
                     jsFilesRemoved: this.getFilesRemoved(previousIteration, currentIteration),
