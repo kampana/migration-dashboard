@@ -38,7 +38,7 @@ The tool gathers the statistics from the local development git repository, polli
 
   }
 }
-
+`
 
 
 ## Security concerns 
