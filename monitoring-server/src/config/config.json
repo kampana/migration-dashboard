@@ -18,6 +18,11 @@
       "searchCategory": "INJECTABLE"
     },
     {
+      "pattern": "$translate",
+      "displayName": "$translate",
+      "searchCategory": "INJECTABLE"
+    },
+    {
       "pattern": "$timeout",
       "displayName": "$timeout",
       "searchCategory": "INJECTABLE"
