@@ -41,7 +41,14 @@ The tool gathers the statistics from the local development git repository, polli
 }
 ```
 
+## How to config
+The ```/monitoring-server/src/config/config.json``` configuration file contains the following:
+1. git - the settings for pulling the latest branch from
+2. dataAccessLayer - the settings to push to any dataAccessLayer desired. (currently only elasticSearch was written, feel free to extend!)
+3. searchPatterns - the search patterns to look in each JS file
+
 ## How to run
+In ```/monitoring-server/``` folder
 ```
 npm install
 npm start
