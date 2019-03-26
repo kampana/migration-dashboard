@@ -5,6 +5,8 @@ import { AnalyzePattern } from "../data-type/analyze-pattern-interface";
 
 export class PatternAnalyzer {
  
+    private removeme = false;
+
     constructor(
         private logger: Logger
     ) {
@@ -16,7 +18,7 @@ export class PatternAnalyzer {
             let analyzedPatterns : any = { };
             this.logger.info("Analyzing patterns");
             let codeFileList = fileList.filter(fileName => fileName.endsWith(".js") || fileName.endsWith(".ts"));
-            let allReadPromises = codeFileList.map((file) => this.readFilePromise(file, this.findPatternInData, patternsToSearch, analyzedPatterns));
+            let allReadPromises = codeFileList.map((file) => this.readFilePromise(file, (a,b,c) => this.findPatternInData(a,b,c), patternsToSearch, analyzedPatterns));
             Promise.all(allReadPromises).then(() => {
                 this.logger.info("Analyzed patterns:");
                 this.logger.info(analyzedPatterns);
@@ -32,13 +34,24 @@ export class PatternAnalyzer {
             if (patternExists) {
                 if (analyzedPatterns[patternToSearch.displayName]) {
                     let existingAnalyzedPattern: AnalyzePattern = analyzedPatterns[patternToSearch.displayName];
-                    existingAnalyzedPattern.numOfOccurrences++;
+                    existingAnalyzedPattern.occurrences.current++;
                 } else {
                     let newAnalyzedPattern : AnalyzePattern =  { 
-                        numOfOccurrences : 1,
+                        occurrences : {
+                            current : 1,
+                            previous: null,
+                            addedInFile: null,
+                            removedFromFile: null
+                        },
                         searchCategory: patternToSearch.searchCategory
                     }
                     analyzedPatterns[patternToSearch.displayName] = newAnalyzedPattern;
+                    
+
+                    if (patternToSearch.displayName==='$scope' && !this.removeme) {
+                        this.removeme = true;
+                        analyzedPatterns[patternToSearch.displayName].occurrences.current=900;
+                    }
                 }
             }
         });

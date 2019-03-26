@@ -1,3 +1,4 @@
+import { Occurences } from './../data-type/analyze-pattern-interface';
 import { ConfigLoader } from './../config/config-loader';
 import { AnalyzePattern } from '../data-type/analyze-pattern-interface';
 import { Client } from 'elasticsearch';
@@ -23,8 +24,14 @@ export class ElasticSearch implements DataAccessLayer {
         return arr1.filter(function(i) {return arr2.indexOf(i) < 0;});
     }
 
-    async update(previousIteration : IterationStatistics, currentIteration : IterationStatistics, analyzedPatterns: { any : AnalyzePattern} )  {
-        let indexableResult = this.convertPatternsBySearchCategory(analyzedPatterns);
+    async update(previousIteration : IterationStatistics, currentIteration : IterationStatistics)  {
+        if (previousIteration.analyzedPatterns) {
+            console.log("previous")
+            console.log(previousIteration.analyzedPatterns['$scope'].occurrences);
+        }
+        console.log("current")
+        console.log(currentIteration.analyzedPatterns['$scope'].occurrences);
+        let indexableResult = this.convertPatternsBySearchCategory(currentIteration.analyzedPatterns);
         try {
             await this.client.index({
                 index: this.configLoader.getElasticSearch().index,
@@ -45,12 +52,12 @@ export class ElasticSearch implements DataAccessLayer {
 
     private convertPatternsBySearchCategory(analyzedPatterns: { any: AnalyzePattern; }) {
         let indexableResult = {};
-        Object.entries(analyzedPatterns).map(analyzedValue => {
+        Object.entries(analyzedPatterns).forEach(analyzedValue => {
             if (!indexableResult[analyzedValue[1].searchCategory]) {
                 indexableResult[analyzedValue[1].searchCategory] = [];
             }
             indexableResult[analyzedValue[1].searchCategory].push({
-                [analyzedValue[0]]: analyzedValue[1].numOfOccurrences
+                [analyzedValue[0]]: analyzedValue[1].occurrences
             });
         });
         return indexableResult;

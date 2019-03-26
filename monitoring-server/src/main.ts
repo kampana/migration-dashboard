@@ -29,8 +29,8 @@ export class Main {
             this.pull();
             this.fileAnalyzer.fileAnaylize();
             this.logger.info("Sleeping until next interval")
-        }, 10 * 60 * 1000);
-        //}, 10 * 1000);
+        //}, 10 * 60 * 1000);
+        }, 10 * 1000);
     }
 
     async pull() {
