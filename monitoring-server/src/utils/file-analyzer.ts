@@ -24,8 +24,8 @@ export class FileAnalyzer {
 
     public async fileAnaylize() {
         this.logger.info("Analyzing files");
-        const excludeDirNames = ["node_modules", "build", "libs"];
-        const websitePath = this.configLoader.getGit().path + "//panayax//projects//as-web-site//src//main//webapp//app//@fingerprint@";
+        const excludeDirNames = ["node_modules", "build", "libs", "angular-migration"]; //TODO URI extract this to config file
+        const websitePath = this.configLoader.getGit().path + "//panayax//projects//as-web-site//src//main//webapp//app//@fingerprint@"; //TODO URI extract this to config file
         let fileList = this.fileLookup.getFilesList(websitePath, excludeDirNames);//TODO URI can be analyzed with dynamic programming 
         this.currentIteration.jsFiles = this.analyzeJSfiles(fileList);
         let analyzedPatterns = await this.analyzer.analyzePatterns(fileList, this.configLoader.getSearchPatterns());
